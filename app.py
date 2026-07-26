@@ -58,6 +58,14 @@ async def predict(file: UploadFile = File(...)):
             class_id = int(box.cls[0])
             confidence = float(box.conf[0])
 
+            x1, y1, x2, y2 = box.xyxy[0].tolist()
+
+            width = x2 - x1
+            height = y2 - y1
+
+            center_x = (x1 + x2) / 2
+            center_y = (y1 + y2) / 2
+
             # Ignore low confidence
             if confidence < 0.3:
                 continue
@@ -85,13 +93,19 @@ async def predict(file: UploadFile = File(...)):
             output.append({
                 "label": class_name,
                 "sinhala": sinhala_letter,
-                "confidence": confidence
+                "confidence": confidence,
+
+                "x": center_x,
+                "y": center_y,
+
+                "width": width,
+                "height": height
             })
 
 
     # Remove temporary image
-    if os.path.exists(file_path):
-        os.remove(file_path)
+    # if os.path.exists(file_path):
+    #     os.remove(file_path)
 
     if len(output) == 0:
         return {
@@ -105,6 +119,8 @@ async def predict(file: UploadFile = File(...)):
         key=lambda x: x["confidence"],
         reverse=True
     )
+
+    print("WORD PREDICTIONS:", output)
 
     return {
         "success": True,
